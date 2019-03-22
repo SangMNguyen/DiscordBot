@@ -5,7 +5,8 @@
 // Creating the client
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const gif = require('./gifURLs.json')
+const gif = require('./gifURLs.json');
+const pass = require('./token.json');
 
 // To notify when online and idle
 client.on('ready', () => {
@@ -31,7 +32,7 @@ client.on('guildCreate', guild => {
 })
 
 // Logging in with the token
-client.login("NTE4NTI0Njc2NjI1MDA2NjAy.DuSCeg.zFMYY4iIKG9824EC2PdRbJniQgU");
+client.login(pass.code);
 
 // GLOBAL FLAGS
 var blackjackOn = false;
