@@ -86,7 +86,7 @@ function command(message) {
             }
             /*message.author.edit({embed: {
                 color: '#FF9BE2',
-                description: "edited bitch"
+                description: "edited"
             }}); */
         break;
 
