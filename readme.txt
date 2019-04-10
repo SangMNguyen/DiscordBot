@@ -8,7 +8,7 @@ A Chat/Entertainment/Utilty Bot for the Discord Application. It will offer a var
 - Slap (Poke Command)
 - Transport (Utility)
 
-amonst many more features to come.
+amongst many more features to come.
 
 Current Goals:
 - Rock Paper Scissors
