@@ -64,12 +64,13 @@ function command(message) {
     let msgID = message.id;
     let noPrefix = message.content.substr(2);
     let noPrefixArray = noPrefix.split(' ');
-    let cmd = noPrefixArray[0];
+    let command = noPrefixArray[0];
     let parameters = noPrefixArray.slice(1);
     
-    console.log("Command Received: " + cmd);
+    console.log("Command Received: " + command);
     console.log("Parameters: " + parameters);
 
+    var cmd = command.toLowerCase();
     switch(cmd) {
         // Basic command to test if bot is on and working
         case 'ping':
@@ -78,12 +79,8 @@ function command(message) {
         
         // testing commands
         case 'test':
-            testHand = ["A:spades:", "K:clubs:", "Q:hearts:", "J:diamonds:", "10:spades:", "5:clubs:", "8:hearts:", "2:diamonds:"]
-            for(var n = 0; n < testHand.length; n++) {
-                message.channel.send(testHand[n]);
-                cardNum = /[1][0]|[2-9]|[AJKQ]/.exec(testHand[n]).toString();
-                message.channel.send(cardNum);
-            }
+            message.delete(1);
+            console.log(message.author.id);
             /*message.author.edit({embed: {
                 color: '#FF9BE2',
                 description: "edited"
@@ -148,11 +145,11 @@ function command(message) {
                 .addField("'highlow' / 'hj'", "Starts Higher or Lower game.")
                 .addField("'lick' '@targetUser'", "Licks a user (You have to mention them)")
                 .addField("'ping'", "pong!")
-                .addField("'roll' '?d?'","Rolls any number of dice (MAX: 25) with any number of sides (MAX: 1000000)")
+                .addField("'roll' '?d?'","Rolls any number of dice (MAX: 10) with any number of sides (MAX: 10000)")
                 .addField("'rps'", "Starts Rock, Paper, Scissor!")
                 .addField("'slap' @targetUser", "Slaps a user (You have to mention them)")
                 .addField("'transport' / 'tp' '(CHANNELNAME)'", "Moves all users in the current channel to another channel");
-            if(message.author.id == '159818886827474946') {
+            if(message.author.id == pass.jon) {
                 embedMsg.addField("For you: 'secretlick'", "Allows you to anonymously lick another user");
             }
             message.channel.send(embedMsg);
@@ -211,26 +208,38 @@ function command(message) {
         
         // To roll any number of dice with any number of sides
         case 'roll':
-            if(/^[0-9]{1,2}d[0-9]{1,5}$/i.test(parameters)) {
-                var paramArray = parameters.match(/[0-9]+/);
+            if(/^[0-9]{1,2}d[0-9]{1,5}$/i.test(parameters[0])) {
+                var paramArray = parameters[0].split('d');
                 var rolls = paramArray[0];
+                if(rolls > 10) {
+                    message.channel.send("Too many rolls, max of 10!");
+                    break;
+                }
                 var sides = paramArray[1];
+                if(sides > 10000) {
+                    message.channel.send("Too many sides, max of 10000!");
+                    break;
+                }
                 var results = [];
                 var cur = 0;
                 for(var i = 0; i < rolls; i++) {
                     cur = Math.floor(Math.random() * sides) + 1;
+                    if(cur == sides) {
+                        cur += " Critical Hit!";
+                    }
                     results.push(cur);
                 }
                 message.channel.send(results);
             }
             else {
-                message.channel.send("Please send a valid parameter. 'ndn'")
+                message.channel.send("Please send a valid parameter. Example: ~!roll 1d20");
             }
         break;
 
         // Rock, Paper, Scissors!
         case 'rps':
             rpsOn = true;
+            message.channel.send("I'm ready. What are you sending out?");
         break;
 
         // To slap a user
@@ -268,25 +277,27 @@ function command(message) {
         break;
 
         // Politely shuts down bot
-        case 'END':
-            message.delete(1)
-            .then(message.channel.send("Eugh, I\'m feeling sleeping...zzz..."))
-            .then(console.log("**Logging off...**"))
-            .then(msg => client.destroy());
+        case 'end':
+            if(message.author.id == pass.creator) {
+                message.delete(1)
+                .then(message.channel.send("Eugh, I\'m feeling sleeping...zzz..."))
+                .then(console.log("**Logging off...**"))
+                .then(msg => client.destroy());
+            }
         break;
         
         /* Resets the bot (not updated with new code)
         case 'Reset':
         message.channel.send('Restarting...')
         .then(msg => client.destroy()) 
-        .then(() => client.login("NTE4NTI0Njc2NjI1MDA2NjAy.DuSCeg.zFMYY4iIKG9824EC2PdRbJniQgU"));
+        .then(() => client.login(pass.code));
         break; */
 
         // Jon's exclusive secret anonymous lick command
         case 'secretlick':
-            /*if(message.author.id !== '159818886827474946') {   // Tests to see if the user is Jon
+            if(message.author.id !== pass.jon) {   // Tests to see if the user is Jon
                 break;
-            } */
+            }
             message.delete(1);
             if(!/^<\@[0-9]+>$/.test(parameters)) {
                 message.channel.send(new Discord.RichEmbed()
@@ -322,7 +333,7 @@ function command(message) {
 }
 
 //
-//  SECONDARY FUNCTIONS
+//  HELPER FUNCTIONS
 //
 
 // Gets the ID of a user from a mention (Returns false if invalid user)
@@ -335,9 +346,12 @@ function getID(userTag){
 
 // Protocol for games (you don't use the prefix for environment clarity and convenience)
 function talk2Bot(message) {
+    var msg = message.content.toLowerCase();
+
+    // Blackjack Logic!
     if(blackjackOn) {
         curChannel = message.channel; // Keeps track of the channel
-        switch(message.content) {
+        switch(msg) {
             // The user hits to draw            
             case 'hit': 
             case 'h':
@@ -365,6 +379,7 @@ function talk2Bot(message) {
                 }
                 while(dealScore < 17) {
                     bjDraw(dHand);
+                    console.log(dealScore);
                     dealScore = bjScoreSum(dHand);
                     curChannel.send("Dealer hits:\n" + dHand[dHand.length-1]);
                     if(checkWin(userScore, dealScore) !== null) {
@@ -378,6 +393,56 @@ function talk2Bot(message) {
                     blackjackOn = false;
                 }
         }
+    }
+
+    // Rock Paper Scissors Logic!
+    if(rpsOn) {
+        var rpsRand = Math.floor(Math.random() * 3);
+        var saysShoot, userShoot;
+        var rpsWin;
+        switch(rpsRand) {
+            case 0:
+                saysShoot = "rock";
+                break;
+            
+            case 1:
+                saysShoot = "paper";
+                break;
+
+            case 2:
+                saysShoot = "scissors";
+                break;
+        }
+        curChannel = message.channel;
+        if(msg == "rock" || msg == "paper" || msg == "scissors") {
+            userShoot = msg;
+            if(userShoot == saysShoot) {
+                message.channel.send("You chose " + userShoot + " and I chose " + saysShoot + "!");
+                message.channel.send("What? We tied! What a coinkydink!");
+            } else {
+                if(Math.abs(userShoot.length-saysShoot.length) == 4) {
+                    if(userShoot.length > saysShoot.length) {
+                        rpsWin = false;
+                    } else {
+                        rpsWin = true;
+                    }
+                } else {
+                    if(userShoot.length > saysShoot.length) {
+                        rpsWin = true;
+                    } else {
+                        rpsWin = false;
+                    }
+                }
+                message.channel.send("You chose " + userShoot + " and I chose " + saysShoot + "!");
+                if(rpsWin) {
+                    message.channel.send("Hey, you won! Nice!");
+                } else {
+                    message.channel.send("Ha! I win! You lose! You suck!");
+                }
+            }
+            rpsOn = false;
+        }
+
     }
 }
 
@@ -403,11 +468,6 @@ function checkWin(score1,score2) {
                 return `Dealer had: ${dHand}\nYou busted with: +${score1 - 21} \nYou lose!`;
         }
         return null;
-    }
-    
-    // Rock, Paper, Scissors!!
-    if(rpsOn) {
-
     }
 }
 
@@ -450,23 +510,30 @@ function bjDraw(hand) {
 
 
 function bjScoreSum(hand) {
-    sum = 0;
+    var sum = 0;
+    var card, cardNum;
     for(i = 0; i < hand.length; i++) {
-        cardNum = /[1][0]|[2-9]|[AJKQ]/.exec(hand[i]).toString();
-        switch(cardNum) {
+        card = /[1][0]|[2-9]|[AJKQ]/.exec(hand[i]).toString();
+        switch(card) {
             case 'K':
             case 'Q':
             case 'J':
                 cardNum = 10;
-            break;
+                break;
             case 'A':
                 if(sum > 10) {
                     cardNum = 1;
                     break;
                 }
                 cardNum = 11;
+                break;
+
+            default:
+                cardNum = parseInt(card);
+                break;
+                
         }
-        sum+=cardNum;
+        sum += cardNum;
     }
     return sum;
 }
