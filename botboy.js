@@ -442,7 +442,6 @@ function talk2Bot(message) {
             }
             rpsOn = false;
         }
-
     }
 }
 
